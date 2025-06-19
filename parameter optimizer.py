@@ -60,10 +60,10 @@ class LayerFrame(ttk.Frame):
 class ModelTrainingGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("신경망 모델 학습 프로그램")
+        self.root.title("딥러닝 학습 프로그램")
         
         # 기본 창 크기 설정
-        window_width = 1400
+        window_width = 850
         window_height = 900
         screen_width = root.winfo_screenwidth()
         screen_height = root.winfo_screenheight()
@@ -99,61 +99,71 @@ class ModelTrainingGUI:
         
         # 메인 프레임
         self.main_frame = ttk.Frame(self.scrollable_frame, padding="10")
-        self.main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        self.main_frame.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
         # 데이터 선택 프레임 추가
         self.data_frame = ttk.LabelFrame(self.main_frame, text="데이터 설정", padding="5")
-        self.data_frame.grid(row=0, column=0, padx=5, pady=5, sticky=(tk.W, tk.E))
+        self.data_frame.grid(row=1, column=0, padx=5, pady=5, sticky=(tk.W, tk.E))
         
         # 기존의 param_frame을 row=1로 이동
         self.param_frame = ttk.LabelFrame(self.main_frame, text="기본 파라미터", padding="5")
-        self.param_frame.grid(row=1, column=0, padx=5, pady=5, sticky=(tk.W, tk.E))
+        self.param_frame.grid(row=2, column=0, padx=5, pady=5, sticky=(tk.W, tk.E))
 
         # 에폭 설정
-        ttk.Label(self.param_frame, text="에폭:").grid(row=0, column=0, padx=5, pady=5)
+        ttk.Label(self.param_frame, text="에폭:").grid(row=1, column=0, padx=5, pady=5)
         self.epoch_var = tk.StringVar(value="100")  # 최대 에폭 수 증가
         self.epoch_entry = ttk.Entry(self.param_frame, textvariable=self.epoch_var, width=10)
-        self.epoch_entry.grid(row=0, column=1, padx=5, pady=5)
+        self.epoch_entry.grid(row=1, column=1, padx=5, pady=5)
 
         # 배치 크기 설정
-        ttk.Label(self.param_frame, text="배치 크기:").grid(row=0, column=2, padx=5, pady=5)
+        ttk.Label(self.param_frame, text="배치 크기:").grid(row=1, column=2, padx=5, pady=5)
         self.batch_var = tk.StringVar(value="16")
         self.batch_entry = ttk.Entry(self.param_frame, textvariable=self.batch_var, width=10)
-        self.batch_entry.grid(row=0, column=3, padx=5, pady=5)
+        self.batch_entry.grid(row=1, column=3, padx=5, pady=5)
 
         # Early Stopping 설정
-        ttk.Label(self.param_frame, text="Early Stopping:").grid(row=1, column=0, padx=5, pady=5)
+        ttk.Label(self.param_frame, text="Early Stopping:").grid(row=2, column=0, padx=5, pady=5)
         self.early_stopping_var = tk.BooleanVar(value=True)
         self.early_stopping_check = ttk.Checkbutton(self.param_frame,
                                                   text="사용",
                                                   variable=self.early_stopping_var)
-        self.early_stopping_check.grid(row=1, column=1, padx=5, pady=5)
+        self.early_stopping_check.grid(row=2, column=1, padx=5, pady=5)
 
         # Patience 설정
-        ttk.Label(self.param_frame, text="Patience:").grid(row=1, column=2, padx=5, pady=5)
+        ttk.Label(self.param_frame, text="Patience:").grid(row=2, column=2, padx=5, pady=5)
         self.patience_var = tk.StringVar(value="5")
         self.patience_entry = ttk.Entry(self.param_frame, textvariable=self.patience_var, width=10)
-        self.patience_entry.grid(row=1, column=3, padx=5, pady=5)
+        self.patience_entry.grid(row=2, column=3, padx=5, pady=5)
 
         # Monitor 설정
-        ttk.Label(self.param_frame, text="Monitor:").grid(row=2, column=0, padx=5, pady=5)
+        ttk.Label(self.param_frame, text="Monitor:").grid(row=3, column=0, padx=5, pady=5)
         self.monitor_var = tk.StringVar(value="val_loss")
         self.monitor_combo = ttk.Combobox(self.param_frame,
                                         textvariable=self.monitor_var,
                                         values=["val_loss", "val_accuracy",
                                                "loss", "accuracy"],
                                         width=15)
-        self.monitor_combo.grid(row=2, column=1, padx=5, pady=5)
+        self.monitor_combo.grid(row=3, column=1, padx=5, pady=5)
 
         # Min Delta 설정
-        ttk.Label(self.param_frame, text="Min Delta:").grid(row=2, column=2, padx=5, pady=5)
+        ttk.Label(self.param_frame, text="Min Delta:").grid(row=3, column=2, padx=5, pady=5)
         self.min_delta_var = tk.StringVar(value="0.0001")
         self.min_delta_entry = ttk.Entry(self.param_frame,
                                        textvariable=self.min_delta_var, width=10)
-        self.min_delta_entry.grid(row=2, column=3, padx=5, pady=5)
+        self.min_delta_entry.grid(row=3, column=3, padx=5, pady=5)
+
+        ttk.Label(self.param_frame, text="문제 유형:").grid(row=0, column=0, padx=5, pady=5)
+        self.problem_type_var = tk.StringVar(value="classification")
+        self.problem_type_combo = ttk.Combobox(self.param_frame,
+                                               textvariable=self.problem_type_var,
+                                               values=["classification", "regression"],
+                                               width=15,
+                                               state="readonly")
+        self.problem_type_combo.grid(row=0, column=1, padx=5, pady=5)
+        self.problem_type_combo.bind('<<ComboboxSelected>>', self.on_problem_type_change)
 
         # 기본 파라미터 프레임에 손실 함수 선택 옵션 추가
-        ttk.Label(self.param_frame, text="손실 함수:").grid(row=3, column=0, padx=5, pady=5)
+        ttk.Label(self.param_frame, text="손실 함수:").grid(row=4, column=0, padx=5, pady=5)
         self.loss_var = tk.StringVar(value="categorical_crossentropy")
         self.loss_combo = ttk.Combobox(self.param_frame,
                                      textvariable=self.loss_var,
@@ -165,19 +175,19 @@ class ModelTrainingGUI:
                                             "huber",
                                             "kullback_leibler_divergence"],
                                      width=25)
-        self.loss_combo.grid(row=3, column=1, columnspan=2, padx=5, pady=5)
+        self.loss_combo.grid(row=4, column=1, columnspan=2, padx=5, pady=5)
 
         # 나머지 프레임들의 row 번호도 1씩 증가
         self.layers_frame = ttk.LabelFrame(self.main_frame, text="레이어 설정", padding="5")
-        self.layers_frame.grid(row=2, column=0, padx=5, pady=5, sticky=(tk.W, tk.E))
+        self.layers_frame.grid(row=3, column=0, padx=5, pady=5, sticky=(tk.W, tk.E))
         self.train_button = ttk.Button(self.main_frame, text="모델 학습 시작",
                                        command=self.train_model)
-        self.train_button.grid(row=3, column=0, pady=10)
+        self.train_button.grid(row=4, column=0, pady=10)
         self.result_frame = ttk.LabelFrame(self.main_frame, text="학습 결과",
                                          padding="5")
-        self.result_frame.grid(row=4, column=0, padx=5, pady=5, sticky=(tk.W, tk.E))
+        self.result_frame.grid(row=5, column=0, padx=5, pady=5, sticky=(tk.W, tk.E))
         self.graph_frame = ttk.Frame(self.main_frame)
-        self.graph_frame.grid(row=5, column=0, padx=5, pady=5, sticky=(tk.W, tk.E))
+        self.graph_frame.grid(row=6, column=0, padx=5, pady=5, sticky=(tk.W, tk.E))
 
         # 데이터 소스 선택
         ttk.Label(self.data_frame, text="데이터 소스:").grid(row=0, column=0, padx=5, pady=5)
@@ -215,7 +225,7 @@ class ModelTrainingGUI:
 
         # 레이어 설정 프레임
         self.layers_frame = ttk.LabelFrame(self.main_frame, text="레이어 설정", padding="5")
-        self.layers_frame.grid(row=2, column=0, padx=5, pady=5, sticky=(tk.W, tk.E))
+        self.layers_frame.grid(row=4, column=0, padx=5, pady=5, sticky=(tk.W, tk.E))
 
         # 레이어 제어 버튼 프레임
         self.layer_control_frame = ttk.Frame(self.layers_frame)
@@ -250,8 +260,8 @@ class ModelTrainingGUI:
                                        anchor="nw")
         self.layers_canvas.configure(yscrollcommand=self.layers_scrollbar.set)
 
-        self.layers_canvas.grid(row=1, column=0, columnspan=3, sticky="nsew")
-        self.layers_scrollbar.grid(row=1, column=3, sticky="ns")
+        self.layers_canvas.grid(row=2, column=0, columnspan=3, sticky="nsew")
+        self.layers_scrollbar.grid(row=2, column=3, sticky="ns")
 
         # layers_frame의 grid 가중치 설정
         self.layers_frame.grid_rowconfigure(1, weight=1)
@@ -268,12 +278,12 @@ class ModelTrainingGUI:
         # 학습 버튼
         self.train_button = ttk.Button(self.main_frame, text="모델 학습 시작",
                                        command=self.train_model)
-        self.train_button.grid(row=3, column=0, pady=10)
+        self.train_button.grid(row=5, column=0, pady=10)
 
         # 결과 표시 영역 (스크롤바 추가)
         self.result_frame = ttk.LabelFrame(self.main_frame, text="학습 결과",
                                          padding="5")
-        self.result_frame.grid(row=4, column=0, padx=5, pady=5,
+        self.result_frame.grid(row=6, column=0, padx=5, pady=5,
                              sticky=(tk.W, tk.E))
 
         # 텍스트 위젯과 스크롤바
@@ -291,7 +301,7 @@ class ModelTrainingGUI:
 
         # 그래프를 표시할 프레임
         self.graph_frame = ttk.Frame(self.main_frame)
-        self.graph_frame.grid(row=5, column=0, padx=5, pady=5,
+        self.graph_frame.grid(row=7, column=0, padx=5, pady=5,
                             sticky=(tk.W, tk.E))
 
         # 그래프 크기 수정 - figsize를 더 작게 설정
@@ -310,24 +320,16 @@ class ModelTrainingGUI:
         self.current_model = None
         self.scaler = None
 
-        ttk.Label(self.param_frame, text="문제 유형:").grid(row=3, column=0, padx=5, pady=5)
-        self.problem_type_var = tk.StringVar(value="classification")
-        self.problem_type_combo = ttk.Combobox(self.param_frame,
-                                               textvariable=self.problem_type_var,
-                                               values=["classification", "regression"],
-                                               width=15,
-                                               state="readonly")
-        self.problem_type_combo.grid(row=3, column=1, padx=5, pady=5)
-        self.problem_type_combo.bind('<<ComboboxSelected>>', self.on_problem_type_change)
+
 
         # 출력층 활성화 함수 선택 추가
-        ttk.Label(self.param_frame, text="출력층 활성화 함수:").grid(row=4, column=0, padx=5, pady=5)
+        ttk.Label(self.param_frame, text="출력층 활성화 함수:").grid(row=5, column=0, padx=5, pady=5)
         self.output_activation_var = tk.StringVar(value="softmax")
         self.output_activation_combo = ttk.Combobox(self.param_frame,
                                                     textvariable=self.output_activation_var,
-                                                    values=["softmax", "sigmoid", "linear"],
+                                                    values=["None","softmax", "sigmoid", "linear"],
                                                     width=15)
-        self.output_activation_combo.grid(row=4, column=1, padx=5, pady=5)
+        self.output_activation_combo.grid(row=5, column=1, padx=5, pady=5)
 
     def on_problem_type_change(self, event=None):
         """문제 유형이 변경될 때 UI 업데이트"""
@@ -344,7 +346,60 @@ class ModelTrainingGUI:
                                          "huber"]
             self.loss_var.set("mean_squared_error")
             self.output_activation_var.set("linear")
-            self.output_activation_combo['values'] = ["linear", "relu", "tanh"]
+            self.output_activation_combo['values'] = ["None","linear", "relu", "tanh"]
+
+        self.training_history = []
+
+        self.save_history_button = ttk.Button(self.main_frame, text="학습 기록 저장",
+                                              command=self.save_training_history)
+        self.save_history_button.grid(row=7, column=0, pady=5)
+
+    def save_training_history(self):
+        """학습 기록을 CSV 파일로 저장"""
+        if not self.training_history:
+            messagebox.showwarning("경고", "저장할 학습 기록이 없습니다.")
+            return
+
+        try:
+            file_path = filedialog.asksaveasfilename(
+                defaultextension=".csv",
+                filetypes=[("CSV files", "*.csv"), ("All files", "*.*")],
+                title="학습 기록 저장"
+            )
+
+            if file_path:
+                df = pd.DataFrame(self.training_history)
+                df.to_csv(file_path, index=False, encoding='utf-8-sig')
+                messagebox.showinfo("알림", "학습 기록이 성공적으로 저장되었습니다.")
+
+        except Exception as e:
+            messagebox.showerror("에러", f"파일 저장 중 오류가 발생했습니다:\n{str(e)}")
+
+    def record_training_results(self, config, history, test_results):
+        """학습 결과를 기록"""
+        record = {
+            '실행 시간': pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S'),
+            '문제 유형': self.problem_type_var.get(),
+            '손실 함수': self.loss_var.get(),
+            '출력층 활성화 함수': self.output_activation_var.get(),
+            '에폭': self.epoch_var.get(),
+            '배치 크기': self.batch_var.get(),
+            '레이어 수': len(self.layer_frames),
+            '최종 손실': test_results[0],
+            '최종 정확도/MAE': test_results[1],
+            '조기 종료': self.early_stopping_var.get(),
+            '데이터 소스': self.data_source_var.get()
+        }
+
+        # 레이어 설정 추가
+        for i, layer in enumerate(config):
+            record[f'레이어{i + 1}_노드'] = layer['nodes']
+            record[f'레이어{i + 1}_활성화'] = layer['activation']
+            record[f'레이어{i + 1}_드롭아웃'] = layer['dropout']
+            record[f'레이어{i + 1}_배치정규화'] = layer['batch_norm']
+
+        self.training_history.append(record)
+
 
     def on_data_source_change(self, event=None):
         """데이터 소스가 변경될 때 호출되는 함수"""
@@ -490,13 +545,14 @@ class ModelTrainingGUI:
 
             # 타겟 데이터 원-핫 인코딩
             from sklearn.preprocessing import LabelEncoder
-            le = LabelEncoder()
-            y = le.fit_transform(y)
-            y = tf.keras.utils.to_categorical(y)
+            if self.problem_type_var.get() == "classification":
+                le = LabelEncoder()
+                y = le.fit_transform(y)
+                y = tf.keras.utils.to_categorical(y)
 
         # 데이터 분할 및 스케일링
         X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=42, stratify=y
+            X, y, test_size=0.2, random_state=42
         )
 
         self.y_train = y_train
@@ -527,8 +583,10 @@ class ModelTrainingGUI:
                 model.add(BatchNormalization())
             if config['dropout'] > 0:
                 model.add(Dropout(config['dropout']))
-
-        model.add(Dense(output_dim, activation=self.output_activation_var.get()))
+        if self.output_activation_var.get() != "None":
+            model.add(Dense(output_dim, activation=self.output_activation_var.get()))
+        else:
+            model.add(Dense(output_dim))
 
         metrics = ['accuracy'] if self.problem_type_var.get() == "classification" else ['mae', 'mse']
 
@@ -618,13 +676,6 @@ class ModelTrainingGUI:
             self.update_log("\n모델 구조:")
             model.summary(print_fn=lambda x: self.update_log(x))
 
-            # 콜백 설정
-            early_stopping = tf.keras.callbacks.EarlyStopping(
-                monitor='val_loss',
-                patience=5,
-                restore_best_weights=True
-            )
-
             # 모델 학습
             self.update_log("\n학습 시작...")
             history = model.fit(
@@ -646,9 +697,12 @@ class ModelTrainingGUI:
                     self.update_log(f"최적의 {self.monitor_var.get()} 값은 {best_epoch + 1}번째 에폭에서 달성되었습니다.")
 
             # 테스트 세트 평가
-            test_loss, test_acc = model.evaluate(X_test_scaled, y_test, verbose=0)
-            self.update_log(f'\n테스트 세트 손실: {test_loss:.4f}')
-            self.update_log(f'테스트 세트 정확도: {test_acc:.4f}')
+            test_results = model.evaluate(X_test_scaled, y_test, verbose=0)
+            self.update_log(f'\n테스트 세트 손실: {test_results[0]:.4f}')
+            self.update_log(f'테스트 세트 정확도: {test_results[1]:.4f}')
+
+            # 학습 결과 기록
+            self.record_training_results(layer_configs, history, test_results)
 
             # 그래프 그리기
             self.plot_history(history)
