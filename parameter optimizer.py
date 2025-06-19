@@ -543,7 +543,7 @@ class ModelTrainingGUI:
             X = df[selected_features].values
             y = df[self.target_var.get()].values
 
-            # 타겟 데이터 원-핫 인코딩
+            # 타겟 데이터 원-핫 인코딩 
             from sklearn.preprocessing import LabelEncoder
             if self.problem_type_var.get() == "classification":
                 le = LabelEncoder()
