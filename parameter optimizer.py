@@ -13,6 +13,8 @@ import seaborn as sns
 from sklearn.metrics import confusion_matrix, classification_report
 import pandas as pd
 from tkinter import filedialog
+import json
+import os
 
 
 class LayerFrame(ttk.Frame):
@@ -64,7 +66,7 @@ class ModelTrainingGUI:
         
         # 기본 창 크기 설정
         window_width = 850
-        window_height = 900
+        window_height = 750
         screen_width = root.winfo_screenwidth()
         screen_height = root.winfo_screenheight()
         center_x = int(screen_width/2 - window_width/2)
@@ -331,6 +333,110 @@ class ModelTrainingGUI:
                                                     width=15)
         self.output_activation_combo.grid(row=5, column=1, padx=5, pady=5)
 
+        self.model_io_frame = ttk.Frame(self.main_frame)
+        self.model_io_frame.grid(row=9, column=0, pady=5)
+
+        self.save_model_button = ttk.Button(self.model_io_frame,
+                                            text="모델 저장",
+                                            command=self.save_model)
+        self.save_model_button.grid(row=0, column=0, padx=5)
+
+        self.load_model_button = ttk.Button(self.model_io_frame,
+                                            text="모델 불러오기",
+                                            command=self.load_model)
+        self.load_model_button.grid(row=0, column=1, padx=5)
+
+        self.training_history = []
+        self.accuracy = []
+
+    def save_model(self):
+        try:
+            file_path = filedialog.asksaveasfilename(
+                defaultextension=".h5",
+                filetypes=[("HDF5 files", "*.h5"), ("All files", "*.*")],
+                title="모델 저장"
+            )
+
+            if file_path:
+                if self.current_model:
+                    # 모델 저장
+                    self.current_model.save(file_path)
+
+                    # 설정 파일 저장 (json)
+                    config = {
+                        'problem_type': self.problem_type_var.get(),
+                        'loss_function': self.loss_var.get(),
+                        'epochs': self.epoch_var.get(),
+                        'batch_size': self.batch_var.get(),
+                        'layers': [frame.get_config() for frame in self.layer_frames],
+                        'output_activation': self.output_activation_var.get(),
+                        'early_stopping': {
+                            'used': self.early_stopping_var.get(),
+                            'monitor': self.monitor_var.get(),
+                            'patience': self.patience_var.get(),
+                            'min_delta': self.min_delta_var.get()
+                        },
+                        'accuracy': self.accuracy
+                    }
+
+                    config_path = file_path.replace('.h5', '_config.json')
+                    with open(config_path, 'w') as f:
+                        json.dump(config, f, indent=4)
+
+                    messagebox.showinfo("성공", "모델과 설정이 저장되었습니다.")
+                else:
+                    messagebox.showwarning("경고", "저장할 모델이 없습니다.")
+        except Exception as e:
+            messagebox.showerror("에러", f"모델 저장 중 오류가 발생했습니다:\n{str(e)}")
+
+    def load_model(self):
+        try:
+            file_path = filedialog.askopenfilename(
+                filetypes=[("HDF5 files", "*.h5"), ("All files", "*.*")],
+                title="모델 불러오기"
+            )
+
+            if file_path:
+                # 모델 불러오기
+                self.current_model = tf.keras.models.load_model(file_path)
+
+                # 설정 파일 불러오기
+                config_path = file_path.replace('.h5', '_config.json')
+                if os.path.exists(config_path):
+                    with open(config_path, 'r') as f:
+                        config = json.load(f)
+
+                    # UI 업데이트
+                    self.problem_type_var.set(config['problem_type'])
+                    self.loss_var.set(config['loss_function'])
+                    self.epoch_var.set(config['epochs'])
+                    self.batch_var.set(config['batch_size'])
+                    self.output_activation_var.set(config['output_activation'])
+
+                    # Early Stopping 설정
+                    es_config = config['early_stopping']
+                    self.early_stopping_var.set(es_config['used'])
+                    self.monitor_var.set(es_config['monitor'])
+                    self.patience_var.set(es_config['patience'])
+                    self.min_delta_var.set(es_config['min_delta'])
+
+                    # 레이어 설정 업데이트
+                    for frame in self.layer_frames:
+                        frame.destroy()
+                    self.layer_frames.clear()
+
+                    for layer_config in config['layers']:
+                        self.add_layer()
+                        frame = self.layer_frames[-1]
+                        frame.nodes_var.set(str(layer_config['nodes']))
+                        frame.activation_var.set(layer_config['activation'])
+                        frame.dropout_var.set(str(layer_config['dropout']))
+                        frame.batch_norm_var.set(layer_config['batch_norm'])
+
+                messagebox.showinfo("성공", "모델과 설정을 불러왔습니다.")
+        except Exception as e:
+            messagebox.showerror("에러", f"모델 불러오기 중 오류가 발생했습니다:\n{str(e)}")
+
     def on_problem_type_change(self, event=None):
         """문제 유형이 변경될 때 UI 업데이트"""
         if self.problem_type_var.get() == "classification":
@@ -374,31 +480,6 @@ class ModelTrainingGUI:
 
         except Exception as e:
             messagebox.showerror("에러", f"파일 저장 중 오류가 발생했습니다:\n{str(e)}")
-
-    def record_training_results(self, config, history, test_results):
-        """학습 결과를 기록"""
-        record = {
-            '실행 시간': pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S'),
-            '문제 유형': self.problem_type_var.get(),
-            '손실 함수': self.loss_var.get(),
-            '출력층 활성화 함수': self.output_activation_var.get(),
-            '에폭': self.epoch_var.get(),
-            '배치 크기': self.batch_var.get(),
-            '레이어 수': len(self.layer_frames),
-            '최종 손실': test_results[0],
-            '최종 정확도/MAE': test_results[1],
-            '조기 종료': self.early_stopping_var.get(),
-            '데이터 소스': self.data_source_var.get()
-        }
-
-        # 레이어 설정 추가
-        for i, layer in enumerate(config):
-            record[f'레이어{i + 1}_노드'] = layer['nodes']
-            record[f'레이어{i + 1}_활성화'] = layer['activation']
-            record[f'레이어{i + 1}_드롭아웃'] = layer['dropout']
-            record[f'레이어{i + 1}_배치정규화'] = layer['batch_norm']
-
-        self.training_history.append(record)
 
 
     def on_data_source_change(self, event=None):
@@ -543,7 +624,7 @@ class ModelTrainingGUI:
             X = df[selected_features].values
             y = df[self.target_var.get()].values
 
-            # 타겟 데이터 원-핫 인코딩 
+            # 타겟 데이터 원-핫 인코딩
             from sklearn.preprocessing import LabelEncoder
             if self.problem_type_var.get() == "classification":
                 le = LabelEncoder()
@@ -688,6 +769,9 @@ class ModelTrainingGUI:
                 verbose=1
             )
 
+            # 현재 모델 저장
+            self.current_model = model
+
             # Early Stopping 정보 출력
             if early_stopping_used:
                 stopped_epoch = len(history.history['loss'])
@@ -701,8 +785,7 @@ class ModelTrainingGUI:
             self.update_log(f'\n테스트 세트 손실: {test_results[0]:.4f}')
             self.update_log(f'테스트 세트 정확도: {test_results[1]:.4f}')
 
-            # 학습 결과 기록
-            self.record_training_results(layer_configs, history, test_results)
+            self.accuracy = test_results
 
             # 그래프 그리기
             self.plot_history(history)
