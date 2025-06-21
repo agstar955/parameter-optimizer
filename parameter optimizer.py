@@ -245,7 +245,7 @@ class ModelTrainingGUI:
         self.remove_layer_button.grid(row=0, column=1, padx=5)
 
         # 레이어 설정을 위한 스크롤 캔버스 (높이 제한)
-        self.layers_canvas = tk.Canvas(self.layers_frame, height=120)
+        self.layers_canvas = tk.Canvas(self.layers_frame, height=90)
         self.layers_scrollbar = ttk.Scrollbar(self.layers_frame,
                                             orient="vertical",
                                             command=self.layers_canvas.yview)
@@ -453,33 +453,6 @@ class ModelTrainingGUI:
             self.loss_var.set("mean_squared_error")
             self.output_activation_var.set("linear")
             self.output_activation_combo['values'] = ["None","linear", "relu", "tanh"]
-
-        self.training_history = []
-
-        self.save_history_button = ttk.Button(self.main_frame, text="학습 기록 저장",
-                                              command=self.save_training_history)
-        self.save_history_button.grid(row=7, column=0, pady=5)
-
-    def save_training_history(self):
-        """학습 기록을 CSV 파일로 저장"""
-        if not self.training_history:
-            messagebox.showwarning("경고", "저장할 학습 기록이 없습니다.")
-            return
-
-        try:
-            file_path = filedialog.asksaveasfilename(
-                defaultextension=".csv",
-                filetypes=[("CSV files", "*.csv"), ("All files", "*.*")],
-                title="학습 기록 저장"
-            )
-
-            if file_path:
-                df = pd.DataFrame(self.training_history)
-                df.to_csv(file_path, index=False, encoding='utf-8-sig')
-                messagebox.showinfo("알림", "학습 기록이 성공적으로 저장되었습니다.")
-
-        except Exception as e:
-            messagebox.showerror("에러", f"파일 저장 중 오류가 발생했습니다:\n{str(e)}")
 
 
     def on_data_source_change(self, event=None):
